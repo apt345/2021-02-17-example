@@ -2,7 +2,32 @@
 <html>
     <head>
         <title>d3.js data driven page</title>
-        <script src="https://d3js.org/d3.v6.min.js"></script>
+        <script src="https://d3js.org/d3.v6.min.js">
+        //el style es CSS que pone las fechas de las tablas en verde o
+        //en negrita si pasamos el cursor por encima
+        //pero para eso hace falta ponerle clase date a las celdas de fecha
+        </script>
+        <style>
+            th{
+                color: blue
+            }
+
+            .name{
+                color: red;
+                border: solid black 1pt
+            }
+            .name:hover{
+                border-width: 2pt;
+            }
+            .date {
+                color: green;
+            }
+            
+            .date:hover
+            {
+                font-weight: bold;
+            }
+        </style>
     </head>
 
     <body>
@@ -10,22 +35,141 @@
             This page is inspired by the 
             <a href="https://observablehq.com/@d3/bar-chart-race" target="_blank"><b>Bar Chart Race</b></a>
             <button onclick="colorP()">Click me</button>
-            <table></table>
 
+
+            <div id="dateSelector"></div>
+            
+            <table>
+                <thead></thead>
+                <tbody></tbody>
+            </table>
+
+            
+            
 
         </p>
 
         <script>
+            var data;//para guardar los datos globalmente como array y no tener que hacer cosas raras con la tabla
+            //ademas esto permite trabajar con data en la consola del navegador
+            //para ir probando cosillas (a diferencia de visual studio que si da un error no enseña nada y no sabemos por qué)
+
+            //cambiar los nombres al espanol con un diccionario
+              //poniendola aqui fuera de la funcion (d,i,c) se aplica a todo el codigo
+
+            const cs={"date":"fecha",
+                "name":"nombre",
+                "category":"categoria",
+                "value":"valor"}
+            
+            //true--> read locally (usually needs security permission, not available on browser)
+            //false, read the https:...
             csv_url = false ? "category-brands.csv" : "https://raw.githubusercontent.com/bernardo-dauria/2021-02-10-example/main/category-brands.csv"
             d3.csv(csv_url,
             (d,i,c) => {
+                //print only 10 lines, if i>0 return exits the function
                 if (i>10) return d
+                //write headers (first line, i=0)
+                if(i==0){
+                    //get table
+                    d3.select("table")
+                    //append row
+                    .append("tr")
+                    //"create" array of headers for that row
+                    .selectAll("th")
+                    //bind the column names to that array
+                    .data(c).enter()
+                    //put the names
+                    .append("th").text(e => cs[e])
+                }
                 d3.select("table")
                 .append("tr")
                 .selectAll("td")
                 .data(c).enter()
                 .append("td").text(e => d[e])
-            })
+                .attr("data-col", e => e)
+                //clasificarlas como date para pintarls de verde y negrita
+                //pero solo la primera columna (date) classed solo funciona si le pasas
+                //"date", true, luego podemos jugar con el true
+                //.classed("date", e=>e=="date")
+                //o en general añadir un atributo clase que añada el nombre de la columna como clase
+                //además de esta manera es general para cualquier dato, no hay que cambiar el codigo
+                //con date por otro nombre
+                .attr("class", e=>e)
+            }).then(tidying)
+
+
+
+            //pero tenemos el desplegable con la tabla fija...
+            function updateTable(d) {
+            d3.select("table tbody")
+                .selectAll("tr")
+                .data(d)
+                .join("tr")
+                .selectAll("td")
+                .data(e => d.columns.map(x => e[x]))
+                .join("td")
+                    .text(x => x);
+        }
+
+        function makeHeader(d) {
+            d3.select("table thead").selectAll("tr").remove()
+
+            d3.select("table thead")
+                .append("tr")
+                .selectAll("th")
+                .data(d.columns)
+                .join("th").text(e => e)
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            function tidying(d){
+                data=d
+                //console.log(d)
+                //map es como el lapply, basicamente coge las fechas
+                //set las agrupa en valores unicos
+                //then, we convert it to array
+                dates=Array.from(new Set(data.map(e=>e.date)))
+                dateselector(dates)
+            }
+
+            function dateselector(d){
+                console.log(d)//funciona y da un array que es lo que deberia venir del tyding
+                //ahora hacemos lo importante, el desplegable para seleccionar
+                d3.select("#dateSelector")
+                .append("select")
+                //array de opciones desplegables
+                .selectAll("option")
+                //array de los datos y bindearlo a opciones
+                .data(d).enter()
+                //añadir la opcion
+                .append("option")
+                //añadir el texto, solo el año, que siempre es uno de enero
+                .text(e=>e.slice(0,4))
+                //añadir un atributo para cada opcion con la fecha completa
+                .attr("value", e=>e)
+            }
+
+
 
             function colorP() {
                 d3.selectAll("p").style("color", "red");
