@@ -65,29 +65,30 @@
             //true--> read locally (usually needs security permission, not available on browser)
             //false, read the https:...
             csv_url = false ? "category-brands.csv" : "https://raw.githubusercontent.com/bernardo-dauria/2021-02-10-example/main/category-brands.csv"
-            d3.csv(csv_url,
-            (d,i,c) => {
+            d3.csv(csv_url
+            //erase this and put it inside new functions (refactoring)
+            //(d,i,c) => {
                 //print only 10 lines, if i>0 return exits the function
-                if (i>10) return d
+                //if (i>10) return d
                 //write headers (first line, i=0)
-                if(i==0){
+                //if(i==0){
                     //get table
-                    d3.select("table")
+                   // d3.select("table")
                     //append row
-                    .append("tr")
+                    //.append("tr")
                     //"create" array of headers for that row
-                    .selectAll("th")
+                    //.selectAll("th")
                     //bind the column names to that array
-                    .data(c).enter()
+                   // .data(c).enter()
                     //put the names
-                    .append("th").text(e => cs[e])
-                }
-                d3.select("table")
-                .append("tr")
-                .selectAll("td")
-                .data(c).enter()
-                .append("td").text(e => d[e])
-                .attr("data-col", e => e)
+                   // .append("th").text(e => cs[e])
+               // }
+               // d3.select("table")
+               // .append("tr")
+               // .selectAll("td")
+               // .data(c).enter()
+               // .append("td").text(e => d[e])
+               // .attr("data-col", e => e)
                 //clasificarlas como date para pintarls de verde y negrita
                 //pero solo la primera columna (date) classed solo funciona si le pasas
                 //"date", true, luego podemos jugar con el true
@@ -95,19 +96,22 @@
                 //o en general añadir un atributo clase que añada el nombre de la columna como clase
                 //además de esta manera es general para cualquier dato, no hay que cambiar el codigo
                 //con date por otro nombre
-                .attr("class", e=>e)
-            }).then(tidying)
+               // .attr("class", e=>e)
+            //}
+            ).then(tidying)
 
 
 
             //pero tenemos el desplegable con la tabla fija...
+            //con estas nuevas funciones, hacemos la tabla dinámica
+            //con (d,i,c) se lee una vez y ya no se puede modificar
             function updateTable(d) {
             d3.select("table tbody")
                 .selectAll("tr")
                 .data(d)
                 .join("tr")
                 .selectAll("td")
-                .data(e => d.columns.map(x => e[x]))
+                .data(e => columns.map(x => e[x]))
                 .join("td")
                     .text(x => x);
         }
@@ -118,38 +122,25 @@
             d3.select("table thead")
                 .append("tr")
                 .selectAll("th")
-                .data(d.columns)
+                .data(columns)
                 .join("th").text(e => e)
         }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            var columns; //variable global de columnas
 
             function tidying(d){
                 data=d
+                columns=d.columns
                 //console.log(d)
                 //map es como el lapply, basicamente coge las fechas
                 //set las agrupa en valores unicos
                 //then, we convert it to array
                 dates=Array.from(new Set(data.map(e=>e.date)))
                 dateselector(dates)
+
+                //advanced version
+                makeHeader(d)
+                updateTable(d)
             }
 
             function dateselector(d){
@@ -157,6 +148,8 @@
                 //ahora hacemos lo importante, el desplegable para seleccionar
                 d3.select("#dateSelector")
                 .append("select")
+                //on change
+                .on("change", d=> updateSelect(d))
                 //array de opciones desplegables
                 .selectAll("option")
                 //array de los datos y bindearlo a opciones
@@ -167,9 +160,19 @@
                 .text(e=>e.slice(0,4))
                 //añadir un atributo para cada opcion con la fecha completa
                 .attr("value", e=>e)
+
             }
 
 
+            function updateSelect(e){
+                //ver el valor de la fecha que se ha escogido
+                val=d3.select("select").node().value
+                console.log(val)
+                //filtrar los datos
+                fdata=d3.filter(data, e=>e.date==val)
+                //actualizar la tabla solo con los datos de ese año
+                updateTable(fdata)
+            }
 
             function colorP() {
                 d3.selectAll("p").style("color", "red");
