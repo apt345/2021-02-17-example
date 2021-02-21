@@ -46,7 +46,7 @@
             <script>//vamos a crear el plot. Width 100% se adecua al tamaño de la ventana del navegador</script>
             <svg id="myCanvas" style="width:100%; height: 200px;"></svg>
 
-            <table>
+            <table id="table">
                 <thead></thead>
                 <tbody></tbody>
             </table>
@@ -121,6 +121,7 @@
                 .data(e => columns.map(x => e[x]))
                 .join("td")
                     .text(x => x);
+
         }
 
         function makeHeader(d) {
@@ -153,7 +154,7 @@
             }
 
             function dateselector(d){
-                console.log(d)//funciona y da un array que es lo que deberia venir del tyding
+                //console.log(d)//funciona y da un array que es lo que deberia venir del tyding
                 //ahora hacemos lo importante, el desplegable para seleccionar
                 d3.select("#dateSelector")
                 .append("select")
@@ -175,13 +176,20 @@
             function updateSelect(e){
                 //ver el valor de la fecha que se ha escogido
                 val=d3.select("select").node().value
-                console.log(val)
-                //filtrar los datos
+                //console.log(val)
+                //filtrar los datos (salen ya ordenados)
                 fdata=d3.filter(data, e=>e.date==val)
+                //mostrar solo los 10 primeros
+                n=10
+                fdata=fdata.sort(d3.descending)
+                //console.log(fdata)
+                fdata=fdata.slice(0,n)
                 //actualizar la tabla solo con los datos de ese año
                 updateTable(fdata)
                 //actualizar el dibujo
                 updateChart(fdata)
+                //add row clickables
+                addRowHandlers()
             }
 
             //funcion para hacer el dibujo
@@ -192,9 +200,13 @@
                 w = svg.node().width.baseVal.value;
                 h = svg.node().height.baseVal.value;
 
+                //hace una escala para poner n bins de datos en una distancia 0,w(ancho)
                 x = d3.scaleLinear([0, data.length], [0, w])
+                //hace una escala para el eje y para que quepa entre 0 y el maximo valor entre 0 y la altura (h)
                 y = d3.scaleLinear([0, maxValue], [0,h])
+                //set de categorias unicas
                 cat = new Set(d3.map(data, d => d.category))
+                //ponerle un color diferente a cada categoria
                 color = d3.scaleOrdinal(cat, d3.schemeTableau10)
 
                 svgBind = svg.text("")
@@ -207,6 +219,8 @@
                     .attr('y', d => y(maxValue - d.value))
                     .attr('height', d => y(d.value))
                     .attr('width', x(1)*0.95)
+                    //esto pone color a cada barrita. sustutiur segundo argumento por "red" o "blue" 
+                    //para que todas tengan el mismo color
                     .attr('fill', d => color(d.category))
 
                     svgBind.enter()
@@ -218,10 +232,37 @@
                     .text(d => d.name);
             }
 
+            
 
             function colorP() {
                 d3.selectAll("p").style("color", "red");
             }
+
+        
+
+            //colour a specfific bar function (given a row)
+
+            function colourBar(){
+                    console.log("hello")
+            }
+
+
+            //function to make rows clickable and use the colour bar function
+
+            function addRowHandlers() {
+                var table = document.getElementById("table");
+                var cells = table.getElementsByTagName("td");
+                for (i = 0; i < cells.length; i++) {
+                    //console.log(cells[i])
+                    cells[i].onclick =function() {
+                        colourBar()
+                    }
+                }
+                
+
+            }
+        
+        
         </script>
     </body>
 </html>
