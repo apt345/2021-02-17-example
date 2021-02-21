@@ -194,7 +194,6 @@
 
             //funcion para hacer el dibujo
             function updateChart(data){
-                //console.log("hello")
 
                 svg =  d3.select("#myCanvas");
                 w = svg.node().width.baseVal.value;
@@ -221,7 +220,8 @@
                     .attr('width', x(1)*0.95)
                     //esto pone color a cada barrita. sustutiur segundo argumento por "red" o "blue" 
                     //para que todas tengan el mismo color
-                    .attr('fill', d => color(d.category))
+                    .attr('fill', "red")
+                    
 
                     svgBind.enter()
                     .append("text")
@@ -242,8 +242,25 @@
 
             //colour a specfific bar function (given a row)
 
-            function colourBar(){
-                    console.log("hello")
+            function colourBar(row){
+                    //console.log("hello")
+                    //console.log(row)
+                    
+                    i=row.id-1
+                    console.log(i)
+                    //companyName=row.getElementsByTagName("td")[1].innerHTML
+                    svg =  d3.select("#myCanvas");
+                    //console.log(svg.selectAll("rect")["_groups"][0][2])
+                    rectangles=svg.selectAll("rect")["_groups"][0]
+                    //repaint all the others in red
+                    for(j=0;j<rectangles.length;j++){
+                        rectangles[j]["style"].fill="red"
+                    }
+                    //select that row and paint the bar into another colour
+                    
+                    a=rectangles[i]
+                    a["style"].fill="blue"
+                    
             }
 
 
@@ -251,11 +268,12 @@
 
             function addRowHandlers() {
                 var table = document.getElementById("table");
-                var cells = table.getElementsByTagName("td");
-                for (i = 0; i < cells.length; i++) {
+                var rows = table.getElementsByTagName("tr");
+                for (i = 0; i < rows.length; i++) {
                     //console.log(cells[i])
-                    cells[i].onclick =function() {
-                        colourBar()
+                    rows[i].id=i
+                    rows[i].onclick =function() {
+                        colourBar(this)
                     }
                 }
                 
